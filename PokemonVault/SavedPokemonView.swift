@@ -12,6 +12,8 @@ struct SavedPokemonView: View {
     
     @Environment(\.managedObjectContext) private var viewContext
     
+    @State private var pokemonToUpdate: Pokemon?
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor (keyPath: \Pokemon.name, ascending: true)]
     )
@@ -21,7 +23,10 @@ struct SavedPokemonView: View {
     var body: some View {
         List {
             ForEach(pokemons) { pokemon in
-                Text(pokemon.name ?? "Unknown")
+                NavigationLink {
+                    PokemonDetailView(pokemon: pokemon)
+                } label: {
+                    Text(pokemon.name ?? "Unknown") }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             deletePokemon(pokemon)
@@ -29,10 +34,21 @@ struct SavedPokemonView: View {
                             Label("",systemImage: "trash")
                         }
                     }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button {
+                            pokemonToUpdate = pokemon
+                        } label: {
+                            Label("", systemImage: "pencil")
+                        }
+                        .tint(.blue)
+                    }
                 
             }
         }
         .navigationTitle("Saved Pokemon")
+        .navigationDestination(item: $pokemonToUpdate) {
+            pokemon in UpdatePokemonView(pokemon: pokemon)
+        }
     }
     
     private func deletePokemon(_ pokemon: Pokemon) {
